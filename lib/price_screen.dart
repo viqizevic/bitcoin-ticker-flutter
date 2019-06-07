@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'coin_data.dart' as coin;
+import 'coin_data.dart';
 import 'package:flutter/cupertino.dart';
 import 'dart:io' show Platform;
 
@@ -11,11 +11,27 @@ class PriceScreen extends StatefulWidget {
 class _PriceScreenState extends State<PriceScreen> {
   String currency = 'EUR';
   String crypto = 'BTC';
-  double value = 10000.57;
+  String rate = '?';
+
+  void getRateData() async {
+    var coinData = await CoinData().getCoinData(crypto, currency);
+    setState(() {
+      if (null == coinData) {
+        rate = '?';
+      }
+      rate = coinData['last'].toStringAsFixed(0);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getRateData();
+  }
 
   DropdownButton<String> getAndroidDropdown() {
     return DropdownButton(
-      items: coin.currenciesList.map<DropdownMenuItem<String>>((String value) {
+      items: currenciesList.map<DropdownMenuItem<String>>((String value) {
         return DropdownMenuItem<String>(
           value: value,
           child: Text(value),
@@ -25,6 +41,7 @@ class _PriceScreenState extends State<PriceScreen> {
         setState(() {
           currency = newValue;
         });
+        getRateData();
       },
       value: currency,
     );
@@ -36,10 +53,11 @@ class _PriceScreenState extends State<PriceScreen> {
       itemExtent: 32.0,
       onSelectedItemChanged: (selectedIndex) {
         setState(() {
-          currency = coin.currenciesList.elementAt(selectedIndex);
+          currency = currenciesList.elementAt(selectedIndex);
         });
+        getRateData();
       },
-      children: coin.currenciesList.map<Text>((String value) {
+      children: currenciesList.map<Text>((String value) {
         return Text(value);
       }).toList(),
     );
@@ -66,7 +84,7 @@ class _PriceScreenState extends State<PriceScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
                 child: Text(
-                  '1 $crypto = ${value.toString()} $currency',
+                  '1 $crypto = $rate $currency',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0,
